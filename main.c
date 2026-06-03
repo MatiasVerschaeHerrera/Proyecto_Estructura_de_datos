@@ -10,7 +10,15 @@
 #include "tdas/multimap.h"
 #include "tdas/queue.h"
 #include "tdas/stack.h"
+#include "historia.h"
 
 int main(){
+  char nombre[100];
+  
+  printf("Bienvenido a !!!\n");
+  printf("Ingresa tu nombre: ");
+  scanf(" %99[^\n]", nombre);
+  presentacion(nombre);
 
+  
 }
