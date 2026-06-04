@@ -59,5 +59,4 @@ typedef struct{
   Heap* ranking_sobrevivientes;
 }  Partida;
 
-
 #endif

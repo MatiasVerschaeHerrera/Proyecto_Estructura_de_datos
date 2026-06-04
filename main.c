@@ -22,5 +22,7 @@ int main(){
   scanf(" %49[^\n]", nombre);
   presentacion(nombre);
 
+  printf("Hola0");
+  
   return 0;
 }
