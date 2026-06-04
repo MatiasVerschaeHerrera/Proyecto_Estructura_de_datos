@@ -11,14 +11,16 @@
 #include "tdas/queue.h"
 #include "tdas/stack.h"
 #include "historia.h"
+#include "structs.h"
 
 int main(){
-  char nombre[100];
+  limpiarPantalla();
+  char nombre[50];
   
   printf("Bienvenido a !!!\n");
   printf("Ingresa tu nombre: ");
-  scanf(" %99[^\n]", nombre);
+  scanf(" %49[^\n]", nombre);
   presentacion(nombre);
 
-  
+  return 0;
 }
