@@ -147,3 +147,39 @@ void destroyGraph(Graph* g) {
     free(g->adjacencyMap);
     free(g);
 }
+
+int hasEdge(Graph* g, const char* src, const char* dest){
+    return getWeight(g, src, dest) != 1;
+}
+
+List* getAllLabels(Graph* g) {
+    if(!g) return;
+
+    List* lista_aux = list_create();
+    MapPair* par = map_first(g->adjacencyMap);
+
+    while(par != NULL){
+        list_pushBack(labels, par->key);
+        par = map_next(g->adjacencyMap);
+    }
+    return labels;
+}
+
+void updateWeight(Graph* g, const char* src, const char *dest) {
+    if (!g || !src || !dest) return;
+
+    MapPair* par = map_search(g->adjacencyMap, (void*)src);
+    if(!par) return;
+
+    List* lista = (List*) par->value;
+    Edge* edge = list_first(lista);
+    
+    while (edge != NULL) {
+        if(strcmp(edge->target, dest) == 0) {
+            int riesgo;
+            riesgo = rand() % 10 + 1;
+            return;
+        }
+        edge = list_next(lista);
+    }
+}

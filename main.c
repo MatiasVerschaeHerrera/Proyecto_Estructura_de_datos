@@ -87,16 +87,24 @@ Partida *iniciarPartida(char* nombre) {
   return aux;
 }
 
-int main(){
-  limpiarPantalla();
-  char nombre[50];
-  
-  printf("Bienvenido a !!!\n");
-  printf("Ingresa tu nombre: ");
-  scanf(" %49[^\n]", nombre);
-  presentacion(nombre);
+void gestionar_traslado() {
 
-  Partida* slot1 = iniciarPartida();
+
+  return;
+}
+
+void gestionar_expediciones() {
+
+
+  return;
+}
+  
+void gestionar_suministros() {
+
+
+  return;
+}
+  
   /*
   typedef struct{
   int dia_actual;
@@ -113,56 +121,83 @@ int main(){
   }  Partida;
 */
   
-  char opcion;
-      do {
-          // aca muestra el menu con las opciones varias
-          puts("==================");
-          printf("     Menu     ");
-          puts("==================");
+  char opcion1;
+  do {
+    // aca muestra el menu con las opciones varias
+    puts("==================");
+    printf("     Menu     ");
+    puts("==================");
 
-          puts("1) Glosario de grafico");
-          puts("2) Búsqueda en Profundidad");
-          puts("3) Buscar en Anchura");
-          puts("4) Buscar A*");
-          puts("5) Salir");
+    puts("1) Ver Instrucciones");
+    puts("2) Iniciar Partida");
+    puts("3) Salir del Juego");
 
-          printf("Ingrese su opción: ");
-          scanf(" %c", &opcion);
+    printf("Ingrese su opción: ");
+    scanf(" %c", &opcion);
 
-          switch (opcion) {
-              case '1':
-                  mostrarGlosario();
-                  break;
-              case '2':
-                  int iteracionesDFS = 0; 
-                  deep_first_search(&estado_inicial, &iteracionesDFS);
-                  printf("Cantidad de iteraciones = %i\n", iteracionesDFS);
-                  break;
-              case '3':
-                  int iteracionesBFS = 0;
-                  breadth_first_search(&estado_inicial, &iteracionesBFS);
-                  printf("Cantidad de iteraciones = %i\n", iteracionesBFS);
-                  break;
-              case '4':
-                  int iteracionesAstar = 0;
-                  busqueda_Astar(&estado_inicial, &iteracionesAstar);
-                  printf("Cantidad de iteraciones = %i\n", iteracionesAstar);
-                  break;
-          }
+      switch (opcion) {
+        case '1':
+          mostrar_instrucciones();
+          break;
+        case '2': {
+          char nombre[50];
+                  
+          printf("Bienvenido a !!!\n");
+          printf("Ingresa tu nombre: ");
+          scanf(" %49[^\n]", nombre);
+          presentacion(nombre);
+                  
+          Partida* slot1 = iniciarPartida();
 
-          // Evitamos pausar y limpiar pantalla si el usuario eligió salir
-          if (opcion != '5') {
+          char opcion2;
+          do {
+            // aca muestra el menu con las opciones varias
+            puts("==================");
+            printf("     Dia %i     ", slot1->dia);
+            puts("==================");
+
+            puts("1) Trasladarce");
+            puts("2) Expediciones");
+            puts("3) Administrar Suministros");
+            puts("4) -- Terminar Jornada --");
+
+            printf("Ingrese su opción: ");
+            scanf(" %c", &opcion);
+
+            switch (opcion) {
+              case '1': {
+                gestionar_traslado();
+                break;
+              }
+              case '2': {
+                gestionar_expediciones();
+                break;
+              }
+              case '3': {
+                gestionar_suministros();
+                break;
+              }
+            }
+            // Evitamos pausar y limpiar pantalla si el usuario eligió salir
+            if (opcion != '4') {
               presioneTeclaParaContinuar();
               limpiarPantalla();
+            }
+
+          } while (opcion != '4');
+          if (opcion != '4') {
+            presioneTeclaParaContinuar();
+            limpiarPantalla();
           }
-
-    } while (opcion != '4');
-
-    return 0;
-  }
-
-  
-  printf("Hola0");
+          slot1->dia++;
+        }
+        // Evitamos pausar y limpiar pantalla si el usuario eligió salir
+    }
+    if (opcion != '3') {
+      presioneTeclaParaContinuar();
+      limpiarPantalla();
+    }
+  } while (opcion != '3');
   
   return 0;
 }
