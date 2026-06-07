@@ -61,6 +61,7 @@ typedef struct{
   char usuario[MAXNOMBRE];
   Graph* Mapa;
   char* ubicacion_actual;
+  int riesgo_actual;
   Map* inventario_grupo;
 
   Map* base_refugios;

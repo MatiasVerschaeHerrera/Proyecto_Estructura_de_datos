@@ -81,7 +81,7 @@ int getWeight(Graph* g, const char* label1, const char* label2) {
     }
     List * lista_aristas = par->value;
     Edge* edge = list_first(lista_aristas);
-    if (edge == NULL) return lista_auxiliar;
+    if (edge == NULL) exit(EXIT_FAILURE);
 
     while (edge != NULL) {
         if(strcmp(edge->target, label2) == 0) {
@@ -153,16 +153,16 @@ int hasEdge(Graph* g, const char* src, const char* dest){
 }
 
 List* getAllLabels(Graph* g) {
-    if(!g) return;
+    if(!g) return NULL;
 
     List* lista_aux = list_create();
     MapPair* par = map_first(g->adjacencyMap);
 
     while(par != NULL){
-        list_pushBack(labels, par->key);
+        list_pushBack(lista_aux, par->key);
         par = map_next(g->adjacencyMap);
     }
-    return labels;
+    return lista_aux;
 }
 
 void updateWeight(Graph* g, const char* src, const char *dest) {

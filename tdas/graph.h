@@ -10,6 +10,7 @@ typedef struct {
     int weight;   // Peso de la conexión
 } Edge;
 
+
 Graph* createGraph();
 void destroyGraph(Graph* g);
 
