@@ -23,6 +23,7 @@ typedef struct{
   char nombre[MAXNOMBRE];
   int salud;
   int hambre;
+  int sed;
 } Sobreviviente;
 
 typedef struct{
@@ -63,11 +64,11 @@ typedef struct{
   char* ubicacion_actual;
   int riesgo_actual;
   Map* inventario_grupo;
-
+  TreeMap * sobrevivientes;
   Map* base_refugios;
-  Queue* cola_eventos;
+  Map* Hashmap_eventos;
   //Stack* pila_deshacer;
-  List* historial_viaje;
+  List* lista_muertos;
   //Heap* ranking_sobrevivientes;
 }  Partida;
 

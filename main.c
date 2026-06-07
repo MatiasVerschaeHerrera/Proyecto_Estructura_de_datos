@@ -11,12 +11,35 @@
 #include "tdas/multimap.h"
 #include "tdas/queue.h"
 #include "tdas/stack.h"
+#include "tdas/graph.h"
+#include "tdas/treemap.h"
 #include "historia.h"
 #include "structs.h"
-#include "tdas/graph.h"
+
 
 int son_iguales_strings(void *key1, void *key2) {
     return strcmp((char*)key1, (char*)key2) == 0;
+}
+int son_menores_strings(void *key1, void *key2) {
+    return strcmp((char*)key1, (char*)key2) < 0;
+}
+
+void cambiarRiesgo(Partida *slot1) {
+  List *lista_ubicaciones = getAllLabels(slot1->Mapa);
+  char *ubicacion = list_first(lista_ubicaciones);
+
+  while(ubicacion != NULL) {
+    List *lista_aristas = getEdges(slot1->Mapa, ubicacion);
+    Edge *arista = list_first(lista_aristas);
+
+    while(arista != NULL) {
+      arista->weight = 1 + rand() % 100;
+      arista = list_next(lista_aristas);
+    }
+    ubicacion = list_next(lista_ubicaciones);
+  }
+  free(lista_ubicaciones);
+  return;
 }
 
 Graph *generarMapa() {
@@ -32,43 +55,70 @@ Graph *generarMapa() {
   int riesgo;
 
   // Refugio
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Puerto", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Distrito-Residencial", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Distrito-Comercial", riesgo);
 
   // Hospital
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Hospital", "Distrito-Comercial", riesgo);
 
   // Distrito Industrial
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Industrial", "Distrito-Comercial", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Industrial", "Puerto", riesgo);
 
   // Distrito Comericial
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Comercial", "Distrito-Residencial", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Comercial", "Hospital", riesgo);
 
   // Distrito Residencial
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Residencial", "Refugio", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Residencial", "Puerto", riesgo);
 
   // Puerto
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Puerto", "Distrito-Industrial", riesgo);
-  riesgo = rand() % 10 + 1;
+  riesgo = 1 + rand() % 100;
   addEdge(mapa, "Puerto", "Refugio", riesgo);
 
 
   return mapa;
+}
+
+Sobreviviente *crearSobreviviente(char *nombre) {
+  Sobreviviente *aux = (Sobreviviente *) malloc(sizeof(Sobreviviente));
+  strcpy(aux->nombre, nombre);
+  aux->salud = 10;
+  aux->hambre = 8;
+  aux->sed = 4;
+
+  return aux;
+}
+
+TreeMap* iniciar_sobrevivientes() {
+
+  TreeMap* arbol = createTreeMap(son_menores_strings);
+
+  Sobreviviente *aux1 = crearSobreviviente("Segovia");
+  Sobreviviente *aux2 = crearSobreviviente("Verscahe");
+  Sobreviviente *aux3 = crearSobreviviente("Florencia");
+  Sobreviviente *aux4 = crearSobreviviente("Luciano");
+
+  insertTreeMap(arbol, aux1->nombre, aux1);
+  insertTreeMap(arbol, aux2->nombre, aux2);
+  insertTreeMap(arbol, aux3->nombre, aux3);
+  insertTreeMap(arbol, aux4->nombre, aux4);
+
+  return arbol;
 }
 
 Partida *iniciarPartida(char* nombre) {
@@ -82,6 +132,8 @@ Partida *iniciarPartida(char* nombre) {
   aux->riesgo_actual = 0;
 
   aux->inventario_grupo = map_create(son_iguales_strings);
+  aux->sobrevivientes = iniciar_sobrevivientes();
+  aux->lista_muertos = list_create();
   
   int* agua = (int *) malloc(sizeof(int));
   *agua = 8;
@@ -104,8 +156,17 @@ void gestionar_traslado(Partida *slot1) {
   puts("=======================");
   printf("     MAPA DIA - %i     \n", slot1->dia_actual);
   puts("=======================");
-  puts("*Escala de Riesgo: 1-10");
-  printf("Ubicacion Actual: '%s', Riesgo: '%i'\n", slot1->ubicacion_actual, slot1->riesgo_actual);
+  puts("*Riesgo Bajo: no hay penalidad");
+  puts("*Riesgo Medio: -1 adicional a necesidades de comida");
+  puts("*Riesgo Alto: -1 adicional a todas las necesidades");
+  printf("Ubicacion Actual: '%s', Riesgo: ", slot1->ubicacion_actual);
+  if(slot1->riesgo_actual < 51){
+    printf("'Bajo'\n");
+  } else if(slot1->riesgo_actual < 81) {
+    printf("'Medio'\n");
+  } else {
+    printf("'Alto'\n");
+  }
   printf("\n");
   
   List* lista_aristas = getEdges(slot1->Mapa, slot1->ubicacion_actual);
@@ -122,7 +183,14 @@ void gestionar_traslado(Partida *slot1) {
   Edge *arista = (Edge *) list_first(lista_aristas);
   int cont = 1;
   while(arista != NULL) {
-    printf("%i.- Ubicacion: '%s', Riesgo: '%i'\n", cont, arista->target, arista->weight);
+    printf("Ubicacion: '%s', Riesgo: ", arista->target);
+    if(arista->weight < 51){
+      printf("'Bajo'\n");
+    } else if(arista->weight < 81) {
+      printf("'Medio'\n");
+    } else {
+      printf("'Alto'\n");
+    }
     arista = list_next(lista_aristas);
     cont++;
   }
@@ -150,16 +218,24 @@ void gestionar_traslado(Partida *slot1) {
     arista = list_next(lista_aristas);
   }
   
-  printf("Ubicacion a trasladar: '%s', Riesgo: '%i'\n", arista->target, arista->weight);
+  printf("Ubicacion a trasladar: '%s', Riesgo: ", arista->target);
+  if(arista->weight < 51){
+    printf("'Bajo'\n");
+  } else if(arista->weight < 81) {
+    printf("'Medio'\n");
+  } else {
+    printf("'Alto'\n");
+  }
   puts("Confirmar traslado (s/n): ");
 
   char sn;
   scanf(" %c", &sn);
   if(sn == 's' || sn == 'S') {
     slot1->ubicacion_actual = arista->target;
-    puts("Traslado Exitoso, el grupo se trasladara al terminar la jornada");
+    slot1->riesgo_actual = arista->weight;
+    puts("Traslado Exitoso, el grupo se trasladara al terminar la jornada.");
   } else {
-    puts("Traslado Cancelado");
+    puts("Traslado Cancelado.");
   }
   return;
 }
@@ -169,16 +245,80 @@ void gestionar_expediciones(Partida *slot1) {
 
   return;
 }
-  
+
+
 void gestionar_suministros(Partida *slot1) {
-
-
+  Pair *par = firstTreeMap(slot1->sobrevivientes);
+  if(par == NULL) return;
+  
+  puts("==============================");
+  printf("     NECESIDADES DIA - %i     \n", slot1->dia_actual);
+  puts("==============================");
+  
+  while(par != NULL) {
+    Sobreviviente *aux = par->value;
+    printf("  %s - Salud: %i - Hambre: %i - Sed: %i\n", aux->nombre, aux->salud, aux->hambre, aux->sed);
+    par = nextTreeMap(slot1->sobrevivientes);
+  }
+  printf("\n");
   return;
 }
 
 void mostrar_instrucciones() {
   puts("asdasdasdaswdawsfa");
   return;
+}
+
+void metricas_dia(Partida *slot1) {
+
+  // Sistema de riesgo afecta necesidades
+  int bonoRiesgoM = 0;
+  int bonoRiesgoA = 0;
+  int bonoRiesgoS = 0;
+
+  if(slot1->riesgo_actual < 51){
+    bonoRiesgoM = 0;
+    bonoRiesgoA = 0;
+    bonoRiesgoS = 0;
+  } else if(slot1->riesgo_actual < 81) {
+    bonoRiesgoM = 0;
+    bonoRiesgoA = 1;
+    bonoRiesgoS = 0;
+  } else {
+    bonoRiesgoM = 1;
+    bonoRiesgoA = 1;
+    bonoRiesgoS = 1;
+  }
+
+  int desventajaM = 1 + bonoRiesgoM;
+  int desventajaA = 1 + bonoRiesgoA;
+  int desventajaS = 1 + bonoRiesgoS;
+  
+  Pair* par = firstTreeMap(slot1->sobrevivientes);
+
+  while(par != NULL) {
+    Sobreviviente *sobreviviente = par->value;
+    
+    sobreviviente->salud -= desventajaM;
+    sobreviviente->hambre -= desventajaA;
+    sobreviviente->sed -= desventajaS;
+
+    if(sobreviviente->salud <= 0 || sobreviviente->hambre <= 0 || sobreviviente->sed <= 0) {
+      list_pushBack(slot1->lista_muertos, strdup(sobreviviente->nombre));
+    } 
+    par = nextTreeMap(slot1->sobrevivientes);
+  }
+  
+  char *nombre = (char *) list_first(slot1->lista_muertos);
+  while(nombre != NULL) {
+    if(searchTreeMap(slot1->sobrevivientes, nombre) != NULL) {
+      printf("> Ha muerto '%s'\n.", nombre);
+      eraseTreeMap(slot1->sobrevivientes, nombre);
+    }
+    nombre = list_next(slot1->lista_muertos);
+  }
+
+  cambiarRiesgo(slot1);
 }
 
 int main() {
@@ -211,7 +351,7 @@ int main() {
           presentacion(nombre);
                   
           Partida* slot1 = iniciarPartida(nombre);
-
+          
           char opcion2;
           do {
             limpiarPantalla();
@@ -250,6 +390,7 @@ int main() {
                 scanf(" %c", &sn);
                 if(sn == 's' || sn == 'S') {
                   slot1->dia_actual++;
+                  metricas_dia(slot1);
                   puts("-- Dia finalizado --");
                   puts("-- Avanzando al siguiente día... --");
                 } else {
@@ -271,11 +412,18 @@ int main() {
               presioneTeclaParaContinuar();
             }
 
-          } while (slot1->dia_actual <= 3);
+          } while (slot1->dia_actual <= 20 && firstTreeMap(slot1->sobrevivientes) != NULL);
+          
+          if(firstTreeMap(slot1->sobrevivientes) != NULL) {
+            puts("Has Ganado!!");
+          } else {
+            puts("Has Perdido!!");
+          }
           free(slot1);
           break;
         }
-        // Evitamos pausar y limpiar pantalla si el usuario eligió salir
+
+        
     }
     if (opcion1 != '3') {
       presioneTeclaParaContinuar();
