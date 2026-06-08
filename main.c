@@ -62,7 +62,7 @@ Graph *generarMapa() {
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Distrito-Comercial", riesgo);
 
-  // Hospital
+  // Hospital POLLA RICA
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Hospital", "Distrito-Comercial", riesgo);
 
