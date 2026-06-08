@@ -109,7 +109,7 @@ TreeMap* iniciar_sobrevivientes() {
   TreeMap* arbol = createTreeMap(son_menores_strings);
 
   Sobreviviente *aux1 = crearSobreviviente("Segovia");
-  Sobreviviente *aux2 = crearSobreviviente("Verscahe");
+  Sobreviviente *aux2 = crearSobreviviente("Verschae");
   Sobreviviente *aux3 = crearSobreviviente("Florencia");
   Sobreviviente *aux4 = crearSobreviviente("Luciano");
 
@@ -152,38 +152,73 @@ Partida *iniciarPartida(char* nombre) {
 
 void gestionar_traslado(Partida *slot1) {
   limpiarPantalla();
-
-  puts("=======================");
-  printf("     MAPA DIA - %i     \n", slot1->dia_actual);
-  puts("=======================");
-  puts("*Riesgo Bajo: no hay penalidad");
-  puts("*Riesgo Medio: -1 adicional a necesidades de comida");
-  puts("*Riesgo Alto: -1 adicional a todas las necesidades");
-  printf("Ubicacion Actual: '%s', Riesgo: ", slot1->ubicacion_actual);
-  if(slot1->riesgo_actual < 51){
-    printf("'Bajo'\n");
-  } else if(slot1->riesgo_actual < 81) {
-    printf("'Medio'\n");
-  } else {
-    printf("'Alto'\n");
-  }
-  printf("\n");
+  if(slot1->se_traslado == 0){
+    puts("=======================");
+    printf("     MAPA DIA - %i     \n", slot1->dia_actual);
+    puts("=======================");
+    puts("*Riesgo Bajo: no hay penalidad");
+    puts("*Riesgo Medio: -1 adicional a necesidades de comida");
+    puts("*Riesgo Alto: -1 adicional a todas las necesidades");
+    printf("Ubicacion Actual: '%s', Riesgo: ", slot1->ubicacion_actual);
+    if(slot1->riesgo_actual < 51){
+      printf("'Bajo'\n");
+    } else if(slot1->riesgo_actual < 81) {
+      printf("'Medio'\n");
+    } else {
+      printf("'Alto'\n");
+    }
+    printf("\n");
+    
+    List* lista_aristas = getEdges(slot1->Mapa, slot1->ubicacion_actual);
   
-  List* lista_aristas = getEdges(slot1->Mapa, slot1->ubicacion_actual);
-
-  if(list_first(lista_aristas) == NULL) {
-    puts("No hay caminos disponibles.");
-    puts("Te has quedado acorralado!");
-    presioneTeclaParaContinuar();
-    return;
-  }
-
-  puts("-- Zonas Disponibles para el Traslado --");
-
-  Edge *arista = (Edge *) list_first(lista_aristas);
-  int cont = 1;
-  while(arista != NULL) {
-    printf("Ubicacion: '%s', Riesgo: ", arista->target);
+    if(list_first(lista_aristas) == NULL) {
+      puts("No hay caminos disponibles.");
+      puts("Te has quedado acorralado!");
+      presioneTeclaParaContinuar();
+      return;
+    }
+  
+    puts("-- Zonas Disponibles para el Traslado --");
+  
+    Edge *arista = (Edge *) list_first(lista_aristas);
+    int cont = 1;
+    while(arista != NULL) {
+      printf("%i) Ubicacion: '%s', Riesgo: ", cont, arista->target);
+      if(arista->weight < 51){
+        printf("'Bajo'\n");
+      } else if(arista->weight < 81) {
+        printf("'Medio'\n");
+      } else {
+        printf("'Alto'\n");
+      }
+      arista = list_next(lista_aristas);
+      cont++;
+    }
+    printf("\n");
+  
+    puts("-- Seleccionar Número del Destino --");
+    puts(" *Escriba '0' para Volver al Menu");
+  
+    int opcion1;
+    scanf(" %i", &opcion1);
+  
+    while(true){
+      if(opcion1 > list_size(lista_aristas) + 1 || opcion1 < 0) {
+        printf("Opcion Invalida.\n");
+        scanf(" %i", &opcion1);
+      } else {
+        break;
+      }
+    }
+  
+    if(opcion1 == 0) return;
+    
+    arista = list_first(lista_aristas);
+    for(int j = 1; j < opcion1; j++){
+      arista = list_next(lista_aristas);
+    }
+    
+    printf("Ubicacion a trasladar: '%s', Riesgo: ", arista->target);
     if(arista->weight < 51){
       printf("'Bajo'\n");
     } else if(arista->weight < 81) {
@@ -191,51 +226,21 @@ void gestionar_traslado(Partida *slot1) {
     } else {
       printf("'Alto'\n");
     }
-    arista = list_next(lista_aristas);
-    cont++;
-  }
-  printf("\n");
-
-  puts("-- Seleccionar Destino --");
-  puts(" *Escriba '0' para Volver al Menu");
-
-  int opcion1;
-  scanf(" %i", &opcion1);
-
-  while(true){
-    if(opcion1 > list_size(lista_aristas) + 1 || opcion1 < 0) {
-      printf("Opcion Invalida.\n");
-      scanf(" %i", &opcion1);
+    puts("Confirmar traslado (s/n): ");
+  
+    char sn;
+    scanf(" %c", &sn);
+    if(sn == 's' || sn == 'S') {
+      slot1->ubicacion_actual = arista->target; // OJO NO TRASLADA AL FINAL DE JORNADA
+      slot1->riesgo_actual = arista->weight;
+      slot1->se_traslado = 1;
+      puts("Traslado Exitoso, el grupo se trasladara al terminar la jornada.");
     } else {
-      break;
+      puts("Traslado Cancelado.");
     }
   }
-
-  if(opcion1 == 0) return;
-  
-  arista = list_first(lista_aristas);
-  for(int j = 1; j < opcion1; j++){
-    arista = list_next(lista_aristas);
-  }
-  
-  printf("Ubicacion a trasladar: '%s', Riesgo: ", arista->target);
-  if(arista->weight < 51){
-    printf("'Bajo'\n");
-  } else if(arista->weight < 81) {
-    printf("'Medio'\n");
-  } else {
-    printf("'Alto'\n");
-  }
-  puts("Confirmar traslado (s/n): ");
-
-  char sn;
-  scanf(" %c", &sn);
-  if(sn == 's' || sn == 'S') {
-    slot1->ubicacion_actual = arista->target;
-    slot1->riesgo_actual = arista->weight;
-    puts("Traslado Exitoso, el grupo se trasladara al terminar la jornada.");
-  } else {
-    puts("Traslado Cancelado.");
+  else{
+    puts("Avance de dia para poder trasladarse");
   }
   return;
 }
@@ -327,7 +332,7 @@ int main() {
   do {
     // aca muestra el menu con las opciones varias
     puts("==================");
-    printf("     Menu     \n");
+    puts("     Menu     ");
     puts("==================");
 
     puts("1) Ver Instrucciones");
@@ -344,13 +349,14 @@ int main() {
         case '2': {
           char nombre[50];
           
-          printf("Bienvenido a !!!\n");
+          printf("Bienvenido a Proyect Sanctuary\n");
           printf("Ingresa tu nombre: ");
           scanf(" %49[^\n]", nombre);
 
           presentacion(nombre);
                   
           Partida* slot1 = iniciarPartida(nombre);
+          slot1->se_traslado = 0;
           
           char opcion2;
           do {
@@ -360,7 +366,7 @@ int main() {
             printf("     Dia %i     \n", slot1->dia_actual);
             puts("==================");
 
-            puts("1) Trasladarce");
+            puts("1) Trasladarse");
             puts("2) Expediciones");
             puts("3) Administrar Suministros");
             puts("4) -- Terminar Jornada --");
@@ -369,7 +375,7 @@ int main() {
 
             printf("Ingrese su opción: ");
             scanf(" %c", &opcion2);
-
+            
             switch (opcion2) {
               case '1': {
                 gestionar_traslado(slot1);
@@ -393,6 +399,7 @@ int main() {
                   metricas_dia(slot1);
                   puts("-- Dia finalizado --");
                   puts("-- Avanzando al siguiente día... --");
+                  slot1->se_traslado = 0;
                 } else {
                   puts("Operacion cancelada.");
                   

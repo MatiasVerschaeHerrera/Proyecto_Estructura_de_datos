@@ -31,7 +31,7 @@ typedef struct{
   int impacto_agua;
   int impacto_comida;
   int impacto_salud;
-  int impacto_sobrevivientes;
+  List *impacto_sobrevivientes;
 } Evento;
 
 typedef struct{
@@ -60,12 +60,12 @@ typedef struct{
 typedef struct{
   int dia_actual;
   char usuario[MAXNOMBRE];
+  int se_traslado;
   Graph* Mapa;
   char* ubicacion_actual;
   int riesgo_actual;
   Map* inventario_grupo;
   TreeMap * sobrevivientes;
-  Map* base_refugios;
   Map* Hashmap_eventos;
   //Stack* pila_deshacer;
   List* lista_muertos;
