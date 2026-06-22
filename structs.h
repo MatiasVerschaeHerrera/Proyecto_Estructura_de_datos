@@ -11,13 +11,26 @@
 #define MAXDESCRIPCION 200
 
 // entidades basicas
-/*
+
 typedef struct{
   int agua;
   int comida;
   int medicina;
 } Recursos;
-*/
+
+
+typedef struct{
+  List *sobrevivientes;
+
+  int agua;
+  int comida;
+  int medicina;
+  char destino[MAXNOMBRE];
+  int riesgo;
+  int prob_exito;
+  int dias;
+  int procesada;
+} Expedicion;
 
 typedef struct{
   char nombre[MAXNOMBRE];
@@ -69,6 +82,8 @@ typedef struct{
   Map* Hashmap_eventos;
   //Stack* pila_deshacer;
   List* lista_muertos;
+  List* lista_expediciones;
+  bool expedicion_dia;
   //Heap* ranking_sobrevivientes;
 }  Partida;
 

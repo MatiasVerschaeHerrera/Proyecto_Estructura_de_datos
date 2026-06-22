@@ -13,6 +13,7 @@ struct TreeNode {
     TreeNode * left;
     TreeNode * right;
     TreeNode * parent;
+    int height;
 };
 
 struct TreeMap {
@@ -27,7 +28,6 @@ int is_equal(TreeMap* tree, void* key1, void* key2){
     else return 0;
 }
 
-
 TreeNode * createTreeNode(void* key, void * value) {
     TreeNode * new = (TreeNode *)malloc(sizeof(TreeNode));
     if (new == NULL) return NULL;
@@ -35,9 +35,197 @@ TreeNode * createTreeNode(void* key, void * value) {
     new->pair->key = key;
     new->pair->value = value;
     new->parent = new->left = new->right = NULL;
+    new->height = 0;
     return new;
 }
 
+void updateHeight(TreeNode *nodo) {
+    
+    if(nodo == NULL) return;
+
+    int heightIzq = -1;
+    if(nodo->left != NULL) {
+        heightIzq = nodo->left->height;
+    }
+    
+    int heightDer = 0;
+    if (nodo->right != NULL) {
+        heightDer = nodo->right->height;
+    }
+
+    if(heightIzq > heightDer) {
+        nodo->height = heightIzq + 1;
+    } else {
+        nodo->height = heightDer + 1;
+    }
+        
+    return;
+}
+
+TreeNode* rot_DD(TreeNode* padre) {
+    
+    TreeNode* hijoIzq = padre->left;
+    TreeNode* nietoDer = hijoIzq->right;
+
+    padre->left = nietoDer;
+    if(nietoDer != NULL) {
+        nietoDer->parent = padre;
+    }
+
+    hijoIzq->right = padre;
+    hijoIzq->parent = padre->parent;
+    padre->parent = hijoIzq;
+    
+    updateHeight(padre);
+    updateHeight(hijoIzq);
+
+    return hijoIzq;
+}
+
+TreeNode* rot_II(TreeNode* padre) {
+    
+    TreeNode* hijoDer = padre->right;
+    TreeNode* nietoIzq = hijoDer->left;
+
+    padre->right = nietoIzq;
+    if(nietoIzq != NULL) {
+        nietoIzq->parent = padre;
+    }
+
+    hijoDer->left = padre;
+    hijoDer->parent = padre->parent;
+    padre->parent = hijoDer;
+
+    updateHeight(padre);
+    updateHeight(hijoDer);
+
+    return hijoDer;
+}
+
+TreeNode* rot_DI(TreeNode* padre) {
+    
+    TreeNode* hijoIzq = padre->left;
+    TreeNode* nietoDer = hijoIzq->right;
+
+    hijoIzq->right = nietoDer->left;
+    if(hijoIzq->right != NULL) {
+        hijoIzq->right->parent = hijoIzq;
+    }
+
+    padre->left = nietoDer->right;
+    if(padre->left != NULL) {
+        padre->left->parent = padre;
+    }
+    
+    nietoDer->left = hijoIzq;
+    hijoIzq->parent = nietoDer;
+    nietoDer->right = padre;
+    padre->parent = nietoDer;
+    nietoDer->parent = padre->parent;
+
+    updateHeight(hijoIzq);
+    updateHeight(padre);
+    updateHeight(nietoDer);
+
+    return nietoDer;
+}
+
+TreeNode* rot_ID(TreeNode* padre) {
+    
+    TreeNode* hijoDer = padre->right;
+    TreeNode* nietoIzq = hijoDer->left;
+
+    padre->right = nietoIzq->left;
+    if(padre->right != NULL) {
+        padre->right->parent = padre;
+    }
+
+    hijoDer->left = nietoIzq->right;
+    if(hijoDer->left != NULL) {
+        hijoDer->left->parent = hijoDer;
+    }
+
+    nietoIzq->left = padre;
+    padre->parent = nietoIzq;
+    nietoIzq->right = hijoDer;
+    hijoDer->parent = nietoIzq;
+    nietoIzq->parent = padre->parent;
+
+    updateHeight(padre);
+    updateHeight(hijoDer);
+    updateHeight(nietoIzq);
+
+    return nietoIzq;
+}
+
+int equilibrio(TreeNode *nodo) {
+    
+    int equilibrio = 0;
+    
+    int heightIzq = -1;
+    if(nodo->left != NULL) {
+        heightIzq = nodo->left->height;
+    }
+
+    int heightDer = -1;
+    if (nodo->right != NULL) {
+        heightDer = nodo->right->height;
+    }
+    
+    equilibrio = heightDer - heightIzq;
+    return equilibrio;
+}
+
+TreeNode* rotacion(TreeNode *nodo) {
+    
+    int fe = equilibrio(nodo);
+
+    if(fe < -1) {
+        if(equilibrio(nodo->left) > 0) {
+            return rot_DI(nodo);
+        } else {
+            return rot_DD(nodo);
+        }
+    } else if(fe > 1) {
+        if(equilibrio(nodo->right) < 0) {
+            return rot_ID(nodo);
+        } else {
+            return rot_II(nodo);
+        }
+    }
+
+    return nodo;
+}
+
+void rebalance(TreeMap *tree, TreeNode* nodo) {
+    
+    TreeNode *aux = nodo;
+
+    while(aux->parent != NULL) {
+        aux = aux->parent;
+        updateHeight(aux);
+
+        int fe = equilibrio(aux);
+
+        if(fe > 1 || fe < -1) {
+            TreeNode *padre = aux->parent;
+            TreeNode *nuevo_padre = (rotacion(aux));
+            nuevo_padre->parent = padre;
+
+            if(padre == NULL) {
+                tree->root = nuevo_padre;
+            } else if(padre->left == aux) {
+                padre->left = nuevo_padre;
+            } else {
+                padre->right = nuevo_padre;
+            }
+
+            aux = nuevo_padre;
+        }
+    }
+
+    tree->root = aux;
+}
 // 1. Implemente la función createTreeMap en el archivo treemap.c. 
 // Esta función recibe la función de comparación de claves y crea un mapa (TreeMap) inicializando sus variables. 
 // Reserve memoria, inicialice el resto de variables y retorne el mapa.
@@ -108,6 +296,8 @@ void insertTreeMap(TreeMap * tree, void* key, void * value) {
     }
     else tree->current->right = aux;
     tree->current = aux;
+
+    rebalance(tree, aux);
 }
 
 // 4. Implemente la función TreeNode * minimum(TreeNode * x). 
@@ -140,6 +330,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
 
     // caso sin hijos
     if(node->left == NULL && node->right == NULL){
+        TreeNode *padre = node->parent;
         if(node->parent == NULL){
             tree->root = NULL;
         }
@@ -150,6 +341,9 @@ void removeNode(TreeMap * tree, TreeNode* node) {
             node->parent->right = NULL;
         }
         free(node);
+        if(padre != NULL) {
+            rebalance(tree, padre);
+        }
     }
     // caso con un hijo
     else if(node->left == NULL || node->right == NULL){
@@ -169,6 +363,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
         }
         else node->parent->right = hijo;
         free(node);
+        rebalance(tree, hijo);
     }
 
     // caso 3
@@ -188,6 +383,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
             hijoMinimo->parent = padreMinimo;
         }
         free(minimo);
+        rebalance(tree, padreMinimo);
     }
 }
 
@@ -245,7 +441,6 @@ Pair * upperBound(TreeMap * tree, void* key) {
 
     Pair* aux = searchTreeMap(tree, key);
     if(aux != NULL) return aux;
-    free(aux);
     
     TreeNode* aux2 = tree->root;
     TreeNode* ub_node = NULL;
@@ -256,7 +451,6 @@ Pair * upperBound(TreeMap * tree, void* key) {
         }
         else aux2 = aux2->right;
     }
-    free(aux2);
     if(ub_node == NULL) return NULL;
     return ub_node->pair;
 }
