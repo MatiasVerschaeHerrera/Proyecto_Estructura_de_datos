@@ -1,7 +1,7 @@
 # compilar
 
 ````
-gcc tdas/*.c *.c -Wno-unused-result -o program
+gcc tdas/*.c *.c -Wno-unused-result -lm -o program
 ````
 
 ejecutar
