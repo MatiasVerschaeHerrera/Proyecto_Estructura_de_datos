@@ -122,3 +122,8 @@ MapPair *map_first(Map *map) { return list_first(map->ls); }
 MapPair *map_next(Map *map) { return list_next(map->ls); }
 
 void map_clean(Map *map) { list_clean(map->ls); }
+
+int map_size(Map *map) {
+  if(map == NULL) return 0;
+  return list_size(map->ls);
+}

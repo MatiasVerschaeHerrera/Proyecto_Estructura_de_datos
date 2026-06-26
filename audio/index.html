@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio - Project Sanctuary</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1f2933, #050505);
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .panel {
+      width: 90%;
+      max-width: 650px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 2px solid #7f1d1d;
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 0 30px rgba(185, 28, 28, 0.4);
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #ef4444;
+      letter-spacing: 2px;
+    }
+
+    .estado {
+      margin: 20px 0;
+      padding: 15px;
+      background: #111827;
+      border-radius: 10px;
+      font-size: 18px;
+    }
+
+    button {
+      background: #991b1b;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+    }
+
+    button:hover {
+      background: #dc2626;
+    }
+
+    .nota {
+      font-size: 14px;
+      color: #d1d5db;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="panel">
+    <h1>PROJECT SANCTUARY</h1>
+
+    <p>Panel de audio del juego</p>
+
+    <div class="estado">
+      Estado actual:
+      <strong id="estadoTexto">Esperando señal...</strong>
+    </div>
+
+    <button onclick="activarAudio()">Activar audio</button>
+    <button onclick="detenerAudio()">Detener manualmente</button>
+
+    <audio id="musica" src="maguito.mp3" loop controls></audio>
+
+    <p class="nota">
+      Deja esta pestaña abierta mientras juegas en la consola.<br>
+      Cuando el programa en C escriba PLAY, la música comenzará.<br>
+      Cuando escriba STOP, la música se detendrá.
+    </p>
+  </div>
+
+  <script>
+    const musica = document.getElementById("musica");
+    const estadoTexto = document.getElementById("estadoTexto");
+
+    let ultimoComando = "";
+
+    async function activarAudio() {
+      try {
+        await musica.play();
+        musica.pause();
+        musica.currentTime = 0;
+
+        estadoTexto.innerText = "Audio activado. Esperando al juego...";
+      } catch (error) {
+        estadoTexto.innerText = "El navegador bloqueó el audio. Presiona el botón otra vez.";
+      }
+    }
+
+    function detenerAudio() {
+      musica.pause();
+      musica.currentTime = 0;
+      estadoTexto.innerText = "Audio detenido manualmente.";
+    }
+
+    async function revisarComando() {
+      try {
+        const respuesta = await fetch("audio_command.txt?nocache=" + Date.now());
+        const comando = (await respuesta.text()).trim();
+
+        if (comando === ultimoComando) {
+          return;
+        }
+
+        ultimoComando = comando;
+
+        if (comando.startsWith("PLAY")) {
+          const partes = comando.split(" ");
+
+          if (partes.length >= 2) {
+            const archivo = partes[1];
+
+            if (!musica.src.endsWith(archivo)) {
+              musica.src = archivo;
+              musica.load();
+            }
+          }
+
+          musica.play();
+          estadoTexto.innerText = "Reproduciendo música...";
+        }
+
+        else if (comando === "STOP") {
+          musica.pause();
+          musica.currentTime = 0;
+          estadoTexto.innerText = "Música detenida.";
+        }
+
+        else {
+          estadoTexto.innerText = "Comando desconocido: " + comando;
+        }
+
+      } catch (error) {
+        estadoTexto.innerText = "No se pudo leer audio_command.txt.";
+      }
+    }
+
+    setInterval(revisarComando, 500);
+  </script>
+</body>
+</html>

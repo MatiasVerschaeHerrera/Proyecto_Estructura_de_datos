@@ -22,4 +22,6 @@ Pair * firstTreeMap(TreeMap * tree);
 
 Pair * nextTreeMap(TreeMap * tree);
 
+int TreeMapSize(TreeMap *tree);
+
 #endif /* TREEMAP_h */

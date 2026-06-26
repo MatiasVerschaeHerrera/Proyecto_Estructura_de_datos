@@ -1,5 +1,6 @@
 #ifndef ESTRUCTURAS_H
 #define ESTRUCTURAS_H
+#include <stdbool.h>
 #include "tdas/list.h"
 #include "tdas/map.h"
 #include "tdas/stack.h"
@@ -7,8 +8,9 @@
 #include "tdas/heap.h"
 #include "tdas/treemap.h"
 #include "tdas/graph.h"
+#include "tdas/hashmap.h"
 #define MAXNOMBRE 50
-#define MAXDESCRIPCION 200
+
 
 // entidades basicas
 
@@ -21,7 +23,6 @@ typedef struct{
 
 typedef struct{
   List *sobrevivientes;
-
   int agua;
   int comida;
   int medicina;
@@ -39,13 +40,6 @@ typedef struct{
   int sed;
 } Sobreviviente;
 
-typedef struct{
-  char descripcion[MAXDESCRIPCION];
-  int impacto_agua;
-  int impacto_comida;
-  int impacto_salud;
-  List *impacto_sobrevivientes;
-} Evento;
 
 typedef struct{
   char nombre[MAXNOMBRE];
@@ -79,7 +73,7 @@ typedef struct{
   int riesgo_actual;
   Map* inventario_grupo;
   TreeMap * sobrevivientes;
-  Map* Hashmap_eventos;
+  HashMap* Hashmap_eventos;
   //Stack* pila_deshacer;
   List* lista_muertos;
   List* lista_expediciones;

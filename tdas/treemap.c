@@ -20,6 +20,7 @@ struct TreeMap {
     TreeNode * root;
     TreeNode * current;
     int (*lower_than) (void* key1, void* key2);
+    int size;
 };
 
 int is_equal(TreeMap* tree, void* key1, void* key2){
@@ -236,6 +237,7 @@ TreeMap * createTreeMap(int (*lower_than) (void* key1, void* key2)) {
     newMap->root = NULL;
     newMap->current = NULL;
     newMap->lower_than = lower_than;
+    newMap->size = 0;
     return newMap;
 }
 
@@ -274,6 +276,7 @@ void insertTreeMap(TreeMap * tree, void* key, void * value) {
         TreeNode *raiz = createTreeNode(key, value);
         tree->root = raiz;
         tree->current = raiz;
+        tree->size++;
         return;
     }
     
@@ -296,6 +299,7 @@ void insertTreeMap(TreeMap * tree, void* key, void * value) {
     }
     else tree->current->right = aux;
     tree->current = aux;
+    tree->size++;
 
     rebalance(tree, aux);
 }
@@ -341,6 +345,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
             node->parent->right = NULL;
         }
         free(node);
+        tree->size--;
         if(padre != NULL) {
             rebalance(tree, padre);
         }
@@ -363,6 +368,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
         }
         else node->parent->right = hijo;
         free(node);
+        tree->size--;
         rebalance(tree, hijo);
     }
 
@@ -383,6 +389,7 @@ void removeNode(TreeMap * tree, TreeNode* node) {
             hijoMinimo->parent = padreMinimo;
         }
         free(minimo);
+        tree->size--;
         rebalance(tree, padreMinimo);
     }
 }
@@ -453,6 +460,12 @@ Pair * upperBound(TreeMap * tree, void* key) {
     }
     if(ub_node == NULL) return NULL;
     return ub_node->pair;
+}
+
+int TreeMapSize(TreeMap *tree) {
+    if(tree == NULL) return 0;
+    
+    return tree->size;
 }
 
 

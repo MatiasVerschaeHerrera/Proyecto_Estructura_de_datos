@@ -27,4 +27,6 @@ MapPair *map_next(Map *map);
 
 void map_clean(Map *map);
 
+int map_size(Map *map);
+
 #endif /* MAP_H */
