@@ -3,4 +3,8 @@
 
 void presentacion(char* nombre);
 
+void ganado();
+
+void perdido();
+
 #endif

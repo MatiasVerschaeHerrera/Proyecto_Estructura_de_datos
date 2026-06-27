@@ -5,14 +5,14 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
+
 // archivos desde la carpeta tdas 
 #include "tdas/extra.h"
 #include "tdas/heap.h"
 #include "tdas/list.h"
 #include "tdas/map.h"
 #include "tdas/multimap.h"
-#include "tdas/queue.h"
-#include "tdas/stack.h"
 #include "tdas/graph.h"
 #include "tdas/treemap.h"
 #include "tdas/hashmap.h" 
@@ -31,15 +31,19 @@
 #define MAXSED 4
 
 #define EVENTO_MAGUITO "1"
-#define TOTAL_EVENTOS 22
+#define TOTAL_EVENTOS 27
 
+//función que verifica si 2 string son identicos
 int son_iguales_strings(void *key1, void *key2) {
     return strcmp((char*)key1, (char*)key2) == 0;
 }
+
+//función que verifica si un string es menor a al otro.
 int son_menores_strings(void *key1, void *key2) {
     return strcmp((char*)key1, (char*)key2) < 0;
 }
 
+// Al procesar el día, se debe actualizar el riesgo que tiene cada ubicación en el mapa, esta función hace exactamente eso.
 void cambiarRiesgo(Partida *slot1, int aux) {
 
   if(slot1->se_traslado == 0) {
@@ -77,6 +81,8 @@ void cambiarRiesgo(Partida *slot1, int aux) {
   return;
 }
 
+
+// Esta función crea el mapa y todos los nodos (ubicaciones). Además, hace la conexión entre la ubicaciones (ya que no todas están conectadas las unas a las otras) y finalmente le agrega un riesgo inicial a cada una de estas.
 Graph *generarMapa() {
   Graph *mapa = createGraph();
   addNode(mapa, "Refugio");
@@ -89,7 +95,7 @@ Graph *generarMapa() {
   srand(time(NULL));
   int riesgo;
 
-  // Refugio si ves esto comenta sixsaeven despues de cada sixseven sixseven
+  // Refugio 
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Puerto", riesgo);
   riesgo = 1 + rand() % 100;
@@ -97,23 +103,23 @@ Graph *generarMapa() {
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Refugio", "Distrito-Comercial", riesgo);
 
-  // Hospital POLLA RICA
+  // Hospital 
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Hospital", "Distrito-Comercial", riesgo);
 
-  // Distrito Industrial Tripalosky
+  // Distrito Industrial 
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Industrial", "Distrito-Comercial", riesgo);
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Industrial", "Puerto", riesgo);
 
-  // Distrito Comercial Puchaina Negra
+  // Distrito Comercial
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Comercial", "Distrito-Residencial", riesgo);
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Comercial", "Hospital", riesgo);
 
-  // Distrito Residencial Mamadores
+  // Distrito Residencial 
   riesgo = 1 + rand() % 100;
   addEdge(mapa, "Distrito-Residencial", "Refugio", riesgo);
   riesgo = 1 + rand() % 100;
@@ -129,36 +135,71 @@ Graph *generarMapa() {
   return mapa;
 }
 
+
+ // Esta función recibe el nombre que elige el jugador para identificarse, la función verifica que el nombre no esté repetido entre los nombres de los actuales sobrevivientes y que este no sea un conjunto de numeros o un espacio en blanco.
 void ingresar_nombre(Partida *slot1, char nombre[]) {
+  
   puts("-- Ingresar Nombre del Nuevo Superviviente --");
+  
   while(true) {
+    bool valido = true;
+    bool existe = false;
+    
     scanf(" %49[^\n]", nombre);
 
+    if(strlen(nombre) == 0) {
+      puts("> Nombre invalido, debe tener como minimo un caracter.");
+      continue;
+    }
+    
+    if(strcmp(nombre, "0") == 0) {
+      puts("> No se permite ese nombre.");
+      continue;
+    }
+    
     for(int i = 0; nombre[i] != '\0'; i++) {
-      if( !isalpha(nombre[i]) ) {
-        puts("> Nombre invalido, debe tener solo caracteres alfabeticos.");
-        continue;
+      if(!isalpha(nombre[i]) && nombre[i] != ' ') {
+        puts("> Nombre invalido, debe tener solo letras.");
+        valido = false;
+        break;
       }
     }
     
     formato_nombre(nombre);
 
-    if(strlen(nombre) == 0) {
-      puts("> Nombre invalido, debe tener como minimo un caracter.");
-      continue;
-    } 
-    if(strcmp(nombre, "0") == 0) {
-      puts("> No se permite ese nombre.");
-      continue;
-    }
-    if(strcmp(nombre, "Magito Explosivo") == 0) {
+    if(!valido) continue;
+    
+    if(strcmp(nombre, "Maguito Explosivo") == 0) {
       puts("> No se permite este nombre, quien sabe si está por allí afuera esperando.");
       continue;
     }
-    
+
     Pair *par = searchTreeMap(slot1->sobrevivientes, nombre);
     if(par != NULL) {
       puts("> Ya existe un superviviente con ese nombre, no queremos confundirlos asi que elige otro.");
+      continue;
+    }
+    
+    Expedicion *expedicion = list_first(slot1->lista_expediciones);
+    
+    while(expedicion != NULL && !existe) {
+      
+      Sobreviviente *sobreviviente = list_first(expedicion->sobrevivientes);
+
+      while(sobreviviente != NULL) {
+        if(strcmp(sobreviviente->nombre, nombre) == 0) {
+          existe = true;
+          break;
+        }
+        sobreviviente = list_next(expedicion->sobrevivientes);
+        
+      }
+    
+      expedicion = list_next(slot1->lista_expediciones);
+    }
+    
+    if(existe) {
+      puts("> Ese nombre ya pertenece a alguien que esta en expedicion.");
       continue;
     }
 
@@ -168,6 +209,7 @@ void ingresar_nombre(Partida *slot1, char nombre[]) {
   return;
 }
 
+// Esta función crea a los sobrevivientes principales (se hace uso de la estructura arbol) 
 TreeMap* iniciar_sobrevivientes() {
 
   TreeMap* arbol = createTreeMap(son_menores_strings);
@@ -185,8 +227,9 @@ TreeMap* iniciar_sobrevivientes() {
   return arbol;
 }
 
+// Esta función crea la partida e inicializa todos los datos necesarios (día actual, el nombre del juagdor, la generación del mapa, la ubicación actual, los suministros base, etc).
 Partida *iniciarPartida(char* nombre) {
-  
+
   Partida* aux = (Partida *) malloc(sizeof(Partida));
   
   aux->dia_actual= 1;
@@ -200,7 +243,7 @@ Partida *iniciarPartida(char* nombre) {
   aux->lista_muertos = list_create();
   aux->lista_expediciones = list_create();
   aux->expedicion_dia = false;
-  aux->Hashmap_eventos = createMap(40);
+  aux->Hashmap_eventos = createMap(TOTAL_EVENTOS * 2);
   
   crear_eventos(aux->Hashmap_eventos);
   
@@ -214,6 +257,9 @@ Partida *iniciarPartida(char* nombre) {
   return aux;
 }
 
+// Esta sección es el menu principal para gestionar un translado, esta función inicialmente muestra los tipos de riegos que existen y la penalidad que tiene cada uno
+// Esta función imprime por pantalla la ubicación actual del grupo y crea una lista de aristas (ubicaciones las cuales se puede mover el jugador)
+// La función deja al jugador elegir a donde transladars y el riesgo que esto implica. Finalmente, el jugador puede confiermar si quiere realizar el translado o no. El translado se hace efectivo al pasar al siguiente día.
 void gestionar_traslado(Partida *slot1) {
   limpiarPantalla();
   if(slot1->se_traslado == 0){
@@ -314,6 +360,7 @@ void gestionar_traslado(Partida *slot1) {
   return;
 }
 
+// Esta función se utiliza cuando el usuario desea administrar los suministros. Esta imprime en pantalla la salud, hambre y sed actual de todos los sobrevivientes.
 void mostrar_necesidades(TreeMap *mapa) {
   Pair *par = firstTreeMap(mapa);
   if(par == NULL) return;
@@ -325,6 +372,7 @@ void mostrar_necesidades(TreeMap *mapa) {
   printf("\n");
 }
 
+// Esta sección muestra en pantalla los sobrevivientes que se encuentran disponibles para hacer una expedición. La función le pide al usuario que ingrese los/el nombre del sobreviviente que quiere enviar a la expedición y lo agrega a un arreglo. Finalmente retorna el arreglo con los sobrevivientes que irán a la expedición.
 int seleccionar_sobrevivientes(Partida *slot1, Sobreviviente *arreglo_seleccionados[], int maxselec) {
   
   puts("-- Sobrevivientes Disponibles --");
@@ -371,6 +419,8 @@ int seleccionar_sobrevivientes(Partida *slot1, Sobreviviente *arreglo_selecciona
   return numselec;
 }
 
+
+// Esta sección muestra en pantalla las ubicaciones disponibles para hacer una expedición y el riesgo que conlleva ir a estos lugares, esta función le pide al jugador ingresar un caracter numerico para elegir la ubicación en donde se quiere realizar la expedición y verifica que sea valido.
 void seleccionar_ubicacion(Partida *slot1, char **ubicacion, int *riesgo) {
   
   List *lista_aux = getEdges(slot1->Mapa, slot1->ubicacion_actual);
@@ -423,33 +473,31 @@ void seleccionar_ubicacion(Partida *slot1, char **ubicacion, int *riesgo) {
   return;
 }
 
+// Esta sección calcula la probabilidad de éxito de una expedición, esto lo hace a partir de la cantidad de sobrevivientes que irán, los suministros que llevan consigo y el riesgo que  significa hacer la expedición.
+//Si el jugador lleva demasiados sobrevivientes y suministros a la expedición, hay una condición que resta la probabilidad de éxito, balanceando un poco el programa. Retorna la probabilidad de éxito que tendrá la expedición.
 int calcular_exito(int numselec, int riesgo, int agua, int comida, int medicina) {
+
+  double bonoRecursos = agua * 1.2 + comida * 1 + medicina * 1.5;
   
-  int probabilidad_exito = 80;
-
-  probabilidad_exito += agua * 2; 
-  probabilidad_exito += comida * 2; 
-  probabilidad_exito += medicina * 3; 
-  if(agua + comida + medicina > 8) {
-    probabilidad_exito -= 10;
-  }
+  double bonoEquipo = numselec * 12;
   
-  probabilidad_exito += numselec * 6;
-  if(numselec >= 4) {
-    probabilidad_exito -= 8;
-  }
+  double bonoRiesgo = riesgo * 0.6;
 
-  probabilidad_exito -= riesgo / 2;
+  double bonos = bonoRecursos + bonoEquipo - bonoRiesgo;
+  
+  double probabilidad_exito = 100.0 * (1.0 - exp(-bonos/40.0)); // aca usa la funcion de ley de rendimientos decrecientes para que asignar suministros, sobrevivientes y riesgo bajo al inicio sume mucho, pero mientras más coloques menos sume
 
-  if (probabilidad_exito < 10) {
+  if(probabilidad_exito < 10){
     probabilidad_exito = 10;
-  } else if (probabilidad_exito > 90) {
-    probabilidad_exito = 90;
+  } else if(probabilidad_exito > 80) {
+    probabilidad_exito = 80;
   }
-  
+
+  //return 100;
   return probabilidad_exito;
 }
 
+// En caso de confirmar la expedición, esta función se hace cargo de crear la expedición con todas los datos previamente otorgados (cant de sobrevivientes que irán, cant de suministros asignados, etc) y finalmente imprime en pantalla cuanto tardará la expedición (numero aleatorio)
 void asignar_expedicion(Partida *slot1, Sobreviviente *arreglo_seleccionados[], int numselec, int probexito, char *destino, int riesgo, int agua, int comida, int medicina) {
 
   Expedicion *expedicion = (Expedicion *) malloc(sizeof(Expedicion));
@@ -476,6 +524,9 @@ void asignar_expedicion(Partida *slot1, Sobreviviente *arreglo_seleccionados[], 
   return;
 }
 
+
+// Esta sección le pregunta al usuario que suministros quiere llevar para las expediciones, le pide inicialmente que recurso desea llevar y posteriormente la cantidad deseada. 
+//los suministros que le asigna se le resta a los recursos totales del grupo (inventario_grupo) 
 void asignar_recursos_expedicion(Partida * slot1, int* agua, int *comida, int* medicina){
   MapPair * pair = map_search(slot1->inventario_grupo, "Recursos");
   if (pair == NULL) return;
@@ -503,10 +554,13 @@ void asignar_recursos_expedicion(Partida * slot1, int* agua, int *comida, int* m
         else{
           puts("Cuantas unidades de agua llevan? (0 para ninguna/cancelar)");
           scanf(" %i", agua);
-          while(*agua < 0 || *agua > recursos ->agua){
-            printf("Valor iválido, ingrese nuevamente");
+          
+          while(*agua < 0 || *agua > 5){
+            puts("> no se pueden llevar más de 5 unidades por suministro");
+            printf("Valor inválido, ingrese nuevamente");
             scanf(" %i",agua);
           }
+          
         }
         break;
       }
@@ -516,8 +570,9 @@ void asignar_recursos_expedicion(Partida * slot1, int* agua, int *comida, int* m
         else{
           puts("Cuantas unidades de comida llevan? (0 para ninguna/cancelar)");
           scanf(" %i", comida);
-          while(*comida < 0 || *comida > recursos ->comida){
-            printf("Valor iválido, ingrese nuevamente");
+          while(*comida < 0 || *comida > 5){
+            puts("> no se pueden llevar más de 5 unidades por suministro");
+            printf("Valor imválido, ingrese nuevamente");
             scanf(" %i",comida);
           }
         }
@@ -529,8 +584,9 @@ void asignar_recursos_expedicion(Partida * slot1, int* agua, int *comida, int* m
         else{
           puts("Cuantas unidades de medicina llevan? (0 para ninguna/cancelar)");
           scanf(" %i", medicina);
-          while(*medicina < 0 || *medicina > recursos ->medicina){
-            printf("Valor iválido, ingrese nuevamente");
+          while(*medicina < 0 || *medicina > 5){
+            puts("> no se pueden llevar más de 5 unidades por suministro");
+            printf("Valor inválido, ingrese nuevamente");
             scanf(" %i",medicina);
           }
         }
@@ -545,6 +601,11 @@ void asignar_recursos_expedicion(Partida * slot1, int* agua, int *comida, int* m
 
 }
 
+
+// Esta sección es el menu principal para realizar las expediciones, en esta se inicializan los valores (prob éxito, los recursos, cant máx de sobrevivientes)
+//En este menu se le pide al jugador elegir a quien enviar a la expedición, el lugar a donde ira y si quiere o no enviar al sobreviviente con suministros.
+//Luego de realizar los cambios, esta función imprime por pantalla todas las decisiones que tomó el jugador y la probabilidad de éxito de la expedición.
+// Finalmente, el jugador puede confirmar o no la expedición. 
 void gestionar_expediciones(Partida *slot1) {
   limpiarPantalla();
   puts("================================");
@@ -607,19 +668,8 @@ void gestionar_expediciones(Partida *slot1) {
   return;
 }
 
-/*int TreeMap_size(TreeMap* mapa) {
-  int cont = 0;
 
-  Pair *aux = firstTreeMap(mapa);
-
-  while(aux != NULL) {
-    cont++;
-    aux = nextTreeMap(mapa);
-  }
-
-  return cont;
-}*/
-
+// Selecciona y retorna un elemento (pair) aleatorio del mapa. La funcion calcula el tamaño total del arbol para generar un indice aleatorio valido. Luego, utilizando las funciones de recorrido del TDA, avanza linealmente desde el primer nodo, hasta alcanzar el Pair generado.
 Pair *TreePair_aleatorio(TreeMap *mapa) {
   int total = TreeMapSize(mapa);
 
@@ -631,6 +681,9 @@ Pair *TreePair_aleatorio(TreeMap *mapa) {
   return par;
 }
 
+// Esta función es la que verifica que se hayan cumplido los días requeridos para la culminación de la expedición.
+// luego de verificar que los plazos se hayan completado, la función verifica que la expedición haya sido un éxito o no. Si la expedición logró ser un éxito, la función recompensa al usuario con un botín, el cual puede ser suministros o la obtención de un nuevo sobreviviente.
+// Si la expedición fue un fracaso, el jugador pierde al sobreviviente que fue enviado a la expedición (RIP).
 void procesar_expedicion(Partida *slot1) {
   
   Expedicion *expedicion = list_first(slot1->lista_expediciones);
@@ -677,11 +730,11 @@ void procesar_expedicion(Partida *slot1) {
         MapPair *aux = map_search(slot1->inventario_grupo, "Recursos");
         if(aux != NULL) {
           Recursos *suministros = (Recursos*) aux->value;
-          if(suministros->medicina <= MAXAGUA) {
+          if(suministros->agua <= MAXAGUA) {
             int ganadoA = 1 + rand() % 4;
             printf("> Has ganado '%i' de Agua\n", ganadoA);
             suministros->agua += ganadoA;
-          } else if(suministros->medicina <= MAXCOMIDA) {
+          } else if(suministros->comida <= MAXCOMIDA) {
             int ganadoC = 1 + rand() % 5;
             printf("> Has ganado '%i' de Comida\n", ganadoC);
             suministros->comida += ganadoC;
@@ -736,18 +789,10 @@ void procesar_expedicion(Partida *slot1) {
   return;
 }
 
-/*void mostrar_suministros(Map *inventario) {
-  puts("-- Suministros en el Inventario --");
-  MapPair *par = map_first(inventario);
-  if(par == NULL) return;
-  while(par != NULL) {
-    printf("%s = %i\n", par->key, *(int*)par->value);
-    par = map_next(inventario);
-  }
-  printf("\n");
-}
-*/
 
+//La siguiente función es un menu en donde se van a poder administrar los suministros entre los sobrevivientes para asegurar su bienestar.
+//Para empezar, la función muestra las necesidades de todos los sobrevivientes y la cantidad de suministros que existen actualmente. Si el jugador desea dar alguno de los sumistros a algún sobreviviente este primero debe marcar que suministro desea entregar y el nombre del sobreviviente al cual va dirigido tal suministro.
+//La función también se encarga que: no se puedan dar suministros que no existan dentro del inventario, que se le den al sobreviviente correcto y que no se pueda dar más de lo establecido.
 void gestionar_suministros(Partida *slot1) {
   
   TreeMap *mapa = slot1->sobrevivientes;
@@ -873,6 +918,7 @@ void gestionar_suministros(Partida *slot1) {
   return;
 }
 
+//Esta función imprime por pantalla todas las instrucciones del juego.
 void mostrar_instrucciones() {
   limpiarPantalla();
   puts("================================================");
@@ -930,6 +976,9 @@ void mostrar_instrucciones() {
   return;
 }
 
+//Esta función crea una desventaja en base al riesgo de la ubicación donde se encuentra actualmente el grupo de sobrevivientes, esta desventaja se aplica en la salud, hambre y sed de cada sobreviviente del grupo.
+//Asimismo, la función informa al jugador si algún sobreviviente se encuentra en baja salud, hambre o sed.
+//Finalmente la función también se encarga de avisar si algún sobreviviente ha muerto.
 void cambiarNecesidades(Partida *slot1){
   int bonoRiesgoM = 0;
   int bonoRiesgoA = 0;
@@ -961,7 +1010,7 @@ void cambiarNecesidades(Partida *slot1){
     sobreviviente->salud -= desventajaM;
     sobreviviente->hambre -= desventajaA;
     sobreviviente->sed -= desventajaS;
-
+    
     if(sobreviviente->hambre == 1) {
       printf(" *'%s' se encuentra en inanicion, alimentalo o morira mañana\n", sobreviviente->nombre);
     }
@@ -981,7 +1030,6 @@ void cambiarNecesidades(Partida *slot1){
   while(nombre != NULL) {
     if(searchTreeMap(slot1->sobrevivientes, nombre) != NULL) {
       printf("> Ha muerto '%s'.\n", nombre);
-      list_pushBack(slot1->lista_muertos, nombre);
       eraseTreeMap(slot1->sobrevivientes, nombre);
     }
     nombre = list_next(slot1->lista_muertos);
@@ -989,6 +1037,8 @@ void cambiarNecesidades(Partida *slot1){
   return;
 }
 
+
+//Tras hacer un translado, esta función se encarga de mostrar la ubicación y el riesgo del nuevo lugar.
 void mostrarTraslado(Partida *slot1) {
   if(slot1->se_traslado == 1) {
     printf("* Nueva ubicacion: '%s', Riesgo: ", slot1->ubicacion_actual);
@@ -1005,6 +1055,7 @@ void mostrarTraslado(Partida *slot1) {
   return;
 }
 
+/*
 void escribir_comando_audio(const char *comando) {
   FILE *archivo = fopen("audio/audio_command.txt", "w");
 
@@ -1027,17 +1078,23 @@ void reproducir_musica(const char *nombre_archivo) {
 void detener_musica() {
   escribir_comando_audio("STOP");
 }
+*/
 
 
-
+//Función que procesa los eventos aleatorios 
+//Calcula la probabilidad de que salga un evento
+// define si el evento es de tipo narrativo o aleatorio (los de tipo narrativo no tienen un impacto en el grupo)
+// Si el evento es de tipo aleatorio, la función analiza si el evento tiene un impacto positivo o negativo frente al grupo y lo imprime por pantalla. 
+//La función también informa si ha muerto o ganado un sobreviviente.
+// Si se ha ganado un sobreviviente y la cantidad sobrevivientes alcanzó su máximo, la función se encarga de no incluirlo a la lista de sobrevivientes.
 int procesar_eventos(Partida *slot1) {
 
-  //if(rand() % 100 < 50) return 0; // 50 % de que salga o no un evento
+  if(rand() % 100 < 50) return 0; // 50 % de que salga o no un evento
   
   char random[3];
-  sprintf(random, "%i", rand() % TOTAL_EVENTOS); // del 0 al 19 en eventos
+  sprintf(random, "%i", rand() % TOTAL_EVENTOS); //
   
-  sprintf(random, "%i", 22); // probar un evento en específico
+  //sprintf(random, "%i", 1); // probar un evento en específico
   
   HashPair *ParHash = searchMap(slot1->Hashmap_eventos, random); 
   
@@ -1056,15 +1113,17 @@ int procesar_eventos(Partida *slot1) {
     
     char descripcion[MAXDESCRIPCION];
     sprintf(descripcion, evento->descripcion, sobreviviente->nombre);
-    printf("> %s\n\n", descripcion);
-
-    printf(" *Los eventos narratios no tienen impacto\n");
-
+    printf(" *%s\n\n", descripcion);
+    
+    if(evento->rescate) return -1;
+    
+    printf(" *Los eventos narrativos no tienen impacto\n");
+    
     printf("\n");
     if(evento->especial) {
       eraseMap(slot1->Hashmap_eventos, random);
     }
-
+  
     return 0;
   }
 
@@ -1076,33 +1135,62 @@ int procesar_eventos(Partida *slot1) {
   if (ParMapa == NULL) return 0;
   Recursos *recursos = (Recursos*) ParMapa->value;
 
+  /*
   if(strcmp(random, EVENTO_MAGUITO) == 0) {
     reproducir_musica("maguito.mp3");
   } else{
     detener_musica();
   }
+  */
   
-  printf("> %s\n\n", evento->descripcion);
-  if(recursos->agua <= MAXAGUA) recursos->agua += evento->impacto_agua;
-  if(recursos->comida <= MAXCOMIDA) recursos->comida += evento->impacto_comida;
-  if(recursos->medicina <= MAXMEDICINA) recursos->medicina += evento->impacto_medicina;
+  printf(" *%s\n\n", evento->descripcion);
 
   if(evento->impacto_agua > 0) {
+    if((recursos->agua + evento->impacto_agua) <= MAXAGUA) {
+      recursos->agua += evento->impacto_agua;
+    } else {
+      recursos->agua = MAXAGUA;
+    }
     printf("> Has ganado '%i' de Agua\n", evento->impacto_agua);
   }
   if(evento->impacto_comida > 0) {
+    if((recursos->comida + evento->impacto_comida) <= MAXCOMIDA) {
+      recursos->comida += evento->impacto_comida;
+    } else {
+      recursos->comida = MAXCOMIDA;
+    }
     printf("> Has ganado '%i' de Comida\n", evento->impacto_comida);
   }
   if(evento->impacto_medicina > 0) {
+    if((recursos->medicina + evento->impacto_medicina) <= MAXMEDICINA) {
+      recursos->medicina += evento->impacto_medicina;
+    } else {
+      recursos->medicina = MAXMEDICINA;
+    }
     printf("> Has ganado '%i' de Medicina\n", evento->impacto_medicina);
   }
   if(evento->impacto_agua < 0) {
+    if((recursos->agua + evento->impacto_agua) >= 0) {
+      recursos->agua += evento->impacto_agua;
+    } else {
+      recursos->agua = 0;
+    }
     printf("> Has perdido '%i' de Agua\n", abs(evento->impacto_agua) );
   }
   if(evento->impacto_comida < 0) {
+    if((recursos->comida + evento->impacto_comida) >= 0) {
+      recursos->comida += evento->impacto_comida;
+    } else {
+      recursos->comida = 0;
+    }
     printf("> Has perdido '%i' de Comida\n", abs(evento->impacto_comida) );
   }
   if(evento->impacto_medicina < 0) {
+    if((recursos->medicina + evento->impacto_medicina) >= 0) {
+      recursos->medicina += evento->impacto_medicina;
+    } else {
+      recursos->medicina = 0;
+    }
     printf("> Has perdido '%i' de Medicina\n", abs(evento->impacto_medicina) );
   }
 
@@ -1116,10 +1204,11 @@ int procesar_eventos(Partida *slot1) {
     if (ParArbol == NULL) return 0;
     Sobreviviente *sobreviviente = ParArbol->value;
     for(int i = 1; i <= cont; i++) {
-      printf("> Ha muerto '%s'\n", sobreviviente->nombre);
       eraseTreeMap(slot1->sobrevivientes, ParArbol->key);
+      printf("> Ha muerto '%s'\n", sobreviviente->nombre);
       ParArbol = TreePair_aleatorio(slot1->sobrevivientes);
       if (ParArbol == NULL) break;
+      sobreviviente = ParArbol->value;
     }
   }
   
@@ -1160,10 +1249,14 @@ int procesar_eventos(Partida *slot1) {
   return riesgo;
 }
 
-void procesar_dia(Partida *slot1) {
+
+//función que se encarga de procesar el nuevo día, esta realiza los cambios en las necesidades de lo sobrevivientes, el cambio de riesgo de la ubicación, procesar la aparición de un evento y si se realizó o no un translado (muestra la nueva ubicación del grupo)
+bool procesar_dia(Partida *slot1) {
 
   int riesgo = procesar_eventos(slot1);
-  
+
+  if(riesgo == -1) return true;
+    
   procesar_expedicion(slot1);
   // Sistema de riesgo afecta necesidades
   cambiarNecesidades(slot1);
@@ -1175,9 +1268,11 @@ void procesar_dia(Partida *slot1) {
 
   slot1->se_traslado = 0;
   slot1->expedicion_dia = false;
-  
+
+  return false;
 }
 
+//Menu principal, aquí es donde el jugador podrá iniciar una nueva partida y realizar la gran mayoría de acciones (gestionar translados, administrar recursos, terminar jornada , etc) 
 int main() {
   limpiarPantalla();
   char opcion1;
@@ -1214,7 +1309,7 @@ int main() {
           getchar();
           
           Partida* slot1 = iniciarPartida(nombre);
-          
+          bool rescate = false;
           char opcion2;
           do {
             limpiarPantalla();
@@ -1256,7 +1351,7 @@ int main() {
                   slot1->dia_actual++;
                   puts("> Dia finalizado");
                   puts("> Avanzando al siguiente día...");
-                  procesar_dia(slot1);
+                  rescate = procesar_dia(slot1);
                   
                 } else {
                   puts("> Operacion cancelada.");
@@ -1277,17 +1372,25 @@ int main() {
               presioneTeclaParaContinuar();
             }
 
-          } while (slot1->dia_actual <= 20 && firstTreeMap(slot1->sobrevivientes) != NULL);
+          } while (slot1->dia_actual <= 20 && firstTreeMap(slot1->sobrevivientes) != NULL && rescate == false);
           
           if(firstTreeMap(slot1->sobrevivientes) != NULL) {
-            puts("> Has Ganado!!");
+            puts("====================");
+            puts("     HAS GANADO     ");
+            puts("====================");
+            
+            ganado();
+            
           } else {
-            puts("> Has Perdido!!");
+            puts("=====================");
+            puts("     HAS PERDIDO     ");
+            puts("=====================");
+            
+            perdido();
           }
           free(slot1);
           break;
         }
-
         
     }
     if (opcion1 != '3') {
@@ -1298,3 +1401,4 @@ int main() {
   
   return 0;
 }
+

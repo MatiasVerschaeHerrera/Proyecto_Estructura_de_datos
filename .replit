@@ -1,36 +1,9 @@
-run = "gcc main.c historia.c tdas/*.c -o program && ./program"
+run = "bash run.sh"
 modules = ["python-3.11"]
 
 [[ports]]
-localPort = 8000
+localPort = 3000
 externalPort = 80
-
-[[ports]]
-localPort = 8001
-externalPort = 3000
 
 [agent]
 expertMode = true
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "gcc main.c tdas/list.c tdas/map.c tdas/heap.c tdas/extra.c tdas/graph.c tdas/treemap.c tdas/hashmap.c historia.c -o program && ./program"

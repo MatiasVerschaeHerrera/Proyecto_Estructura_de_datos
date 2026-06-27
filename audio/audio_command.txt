@@ -1,1 +1,1 @@
-STOP
+PLAY maguito.mp3

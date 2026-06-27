@@ -16,6 +16,7 @@ typedef struct{
   int impacto_riesgo;
   bool especial;
   bool narrativo;
+  bool rescate;
 } Evento;
 
 Sobreviviente *crearSobreviviente(char *nombre) {
@@ -90,7 +91,7 @@ void crear_eventos(HashMap *Hashmap_eventos) {
 
   //Evento 4
   aux = (Evento *) malloc(sizeof(Evento));
-  strcpy(aux->descripcion, "El gobierno ha lanzado cajas de suministros a los refugios de la region.");
+  strcpy(aux->descripcion, "Un fuerte ruido los ha despertado, el gobierno ha lanzado cajas de suministros a los refugios de la region.");
   aux->impacto_agua = 10;
   aux->impacto_comida = 15;
   aux->impacto_medicina = 5;
@@ -142,7 +143,7 @@ void crear_eventos(HashMap *Hashmap_eventos) {
 
   //Evento 8
   aux = (Evento *) malloc(sizeof(Evento));
-  strcpy(aux->descripcion, "Hubo un fuerte temblor en la zona, debido al pánico los sobrevivientes corren en diferentes direcciones. Después de un tiempo se logran reencontrar, sin embargo falta un sobreviviente.");
+  strcpy(aux->descripcion, "Un fuerte ruido los ha despertado, un terremoto azota la zona, debido al pánico los sobrevivientes corren en diferentes direcciones. Después de un tiempo se logran reencontrar, sin embargo falta un sobreviviente.");
   aux->impacto_agua = 0;
   aux->impacto_comida = 0;
   aux->impacto_medicina = 0;
@@ -168,7 +169,7 @@ void crear_eventos(HashMap *Hashmap_eventos) {
 
   //Evento 10
   aux = (Evento *) malloc(sizeof(Evento));
-  strcpy(aux->descripcion, "Alguien no apagó la alarma del celular... Una horda de zombies ataca tu refugio, los sobrevivientes logran escapar, sin embargo, uno resulta herido.");
+  strcpy(aux->descripcion, "Un fuerte ruido los ha despertado, alguien no apagó la alarma del celular... Una horda de zombies ataca tu refugio, los sobrevivientes logran escapar, sin embargo, uno resulta herido.");
   aux->impacto_agua = 0;
   aux->impacto_comida = 0;
   aux->impacto_medicina = -2;
@@ -330,8 +331,9 @@ void crear_eventos(HashMap *Hashmap_eventos) {
 
   //Eventos Narrativos, chicos estos los puse para que el jugador reflexiones y se de cmo cuenta de que las vidas de la gente que está gestionando importan
 
+  //Evento 22
   aux = (Evento *) malloc(sizeof(Evento));
-  strcpy(aux->descripcion, "Hoy fue el cumpleaños de %s, nadie lo menciona en voz alta, no hay celebraciones, ni regalos, pero durante el desayuno alguien deja una especie de galleta frente a su plato. Ese momento de silencio quizá vale mpas que cualquier fiesta que haya tenido antes del colapso.");
+  strcpy(aux->descripcion, "Hoy fue el cumpleaños de %s, nadie lo menciona en voz alta, no hay celebraciones, ni regalos, pero durante el desayuno alguien deja una especie de galleta frente a su plato. Ese momento de silencio quiza vale mas que cualquier fiesta que haya tenido antes del colapso.");
   aux->impacto_agua = 0;
   aux->impacto_comida = 0;
   aux->impacto_medicina = 0;
@@ -340,7 +342,79 @@ void crear_eventos(HashMap *Hashmap_eventos) {
   aux->lista_sobrevivientes = list_create();
   aux->especial = true;
   aux->narrativo = true;
+  aux->rescate = false;
   insertMap(Hashmap_eventos, "22" , aux);
+
+  //Evento 23
+  aux = (Evento *) malloc(sizeof(Evento));
+  strcpy(aux->descripcion, "Anoche %s pidio salir unos minutos del refugio. No para buscar refugios ni vigilar, solo queria ver el cielo. dijo que es dificil recordar como era la ciudad cuando todavia habian luces por las calles.");
+  aux->impacto_agua = 0;
+  aux->impacto_comida = 0;
+  aux->impacto_medicina = 0;
+  aux->impacto_sobrevivientes = 0;
+  aux->impacto_riesgo = 0;
+  aux->lista_sobrevivientes = list_create();
+  aux->especial = true;
+  aux->narrativo = true;
+  aux->rescate = false;
+  insertMap(Hashmap_eventos, "23" , aux);
+
+  //Evento 24
+  aux = (Evento *) malloc(sizeof(Evento));
+  strcpy(aux->descripcion, "A las 4 de la mañana, la radio capto una señal. Era musica, alguien en algun lugar seguia trasmitiendo canciones como si el mundo nunca hubiese terminado. Durante unos minutos nadie durmio, todos escuchaban, como si algo hubiese cambiado dentro de todos.");
+  aux->impacto_agua = 0;
+  aux->impacto_comida = 0;
+  aux->impacto_medicina = 0;
+  aux->impacto_sobrevivientes = 0;
+  aux->impacto_riesgo = 0;
+  aux->lista_sobrevivientes = list_create();
+  aux->especial = true;
+  aux->narrativo = true;
+  aux->rescate = false;
+  insertMap(Hashmap_eventos, "24" , aux);
+
+  //Evento 25
+  aux = (Evento *) malloc(sizeof(Evento));
+  strcpy(aux->descripcion, "Revisando el mapa %s te pregunta sin vacilar, ¿Crees que el rescate es real? No tienes una respuesta honesta que darle, le dices que si, el sabe que mientes, pero lo necesita igual. A veces liderar es cargar con las dudas de todos para que los demas puedan dormir.");
+  aux->impacto_agua = 0;
+  aux->impacto_comida = 0;
+  aux->impacto_medicina = 0;
+  aux->impacto_sobrevivientes = 0;
+  aux->impacto_riesgo = 0;
+  aux->lista_sobrevivientes = list_create();
+  aux->especial = true;
+  aux->narrativo = true;
+  aux->rescate = false;
+  insertMap(Hashmap_eventos, "25" , aux);
+
+  //Evento 26
+  aux = (Evento *) malloc(sizeof(Evento));
+  strcpy(aux->descripcion, "Durante una exploracion %s reconoce una calle, su casa estaba a cinco cuadras. Lo ves detenerse y mirar por unos segundos al horizonte, siguen caminando sin preguntar. Algunos sentimientos no necesitan explicacion para ser entendidos, el grupo sigue adelante en silencio.");
+  aux->impacto_agua = 0;
+  aux->impacto_comida = 0;
+  aux->impacto_medicina = 0;
+  aux->impacto_sobrevivientes = 0;
+  aux->impacto_riesgo = 0;
+  aux->lista_sobrevivientes = list_create();
+  aux->especial = true;
+  aux->narrativo = true;
+  aux->rescate = false;
+  insertMap(Hashmap_eventos, "26" , aux);
+
+  //Evento 27
+  aux = (Evento *) malloc(sizeof(Evento));
+  strcpy(aux->descripcion, "Un fuerte ruido los ha despertado, han enviado a %s a investigar.");
+  aux->impacto_agua = 0;
+  aux->impacto_comida = 0;
+  aux->impacto_medicina = 0;
+  aux->impacto_sobrevivientes = 0;
+  aux->impacto_riesgo = 0;
+  aux->lista_sobrevivientes = list_create();
+  aux->especial = true;
+  aux->narrativo = true;
+  aux->rescate = true;
+  insertMap(Hashmap_eventos, "27" , aux);
+  
   
   return;
 }
